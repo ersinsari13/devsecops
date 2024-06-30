@@ -44,11 +44,47 @@ pipeline {
                 sh "mvn clean install"
             }
         }
-        stage('OWASP FS SCAN') {
+        stage('OWASP-Dependency-Check') {
             steps {
-                withEnv(["PATH+DC=${tool 'DP-Check'}/bin"]) {
-                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                sh "mvn dependency-check:check"
+            }
+            post {
+                always {
+                    dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+                }
+            }
+        }
+        
+        stage('Scan Dockerfile with conftest') {
+            steps {
+                echo 'Scanning Dockerfile'
+                sh "docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy dockerfile-conftest.rego Dockerfile"
+            }
+        }
+        
+        stage('Prepare Tags for Docker Images') {
+            steps {
+                echo 'Preparing Tags for Docker Images'
+                script {
+                    MVN_VERSION=sh(script:'. ${WORKSPACE}/target/maven-archiver/pom.properties && echo $version', returnStdout:true).trim()
+                    env.IMAGE_TAG_DEVSECOPS="ersinsari/devsecops:${MVN_VERSION}-b${BUILD_NUMBER}"
+                }
+            }
+        }
+        stage('Build App Docker Images') {
+            steps {
+                echo 'Building App Dev Images'
+                sh "docker build --force-rm -t ${IMAGE_TAG_DEVSECOPS} ."
+                sh 'docker image ls'
+            }
+        }
+        stage('Scan Image with Trivy') {
+            steps {
+                script {
+                    def scanResult = sh(script: "trivy image --severity CRITICAL --exit-code 1 ${IMAGE_TAG_DEVSECOPS}", returnStatus: true)
+                    if (scanResult != 0) {
+                        error "Critical vulnerabilities found in Docker image. Failing the pipeline."
+                    }
                 }
             }
         }
