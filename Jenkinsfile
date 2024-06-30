@@ -39,9 +39,9 @@ pipeline {
                 }
             }
         }
-        stage("Build"){
-            steps{
-                sh " mvn clean install"
+        stage("Build") {
+            steps {
+                sh "mvn clean install"
             }
         }
         stage('OWASP FS SCAN') {
@@ -49,9 +49,8 @@ pipeline {
                 withEnv(["PATH+DC=${tool 'DP-Check'}/bin"]) {
                     dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                     dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                }
+            }
         }
-    }
-}
-
     }
 }
