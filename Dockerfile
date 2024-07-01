@@ -1,4 +1,6 @@
 FROM openjdk:8
 EXPOSE 8082
-ADD target/petclinic.war petclinic.war
-ENTRYPOINT ["java","-jar","/petclinic.war"]
+COPY target/petclinic.war petclinic.war
+RUN addgroup -S devops-security && adduser -u 999 -S devsecops -G devops-security
+USER 999
+ENTRYPOINT ["java","-jar","/home/devsecops/petclinic.war"]
