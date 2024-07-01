@@ -1,230 +1,337 @@
-# Spring PetClinic Sample Application  
+DevSecOps End to End Pipeline
 
-[![Java CI with Maven](https://github.com/spring-petclinic/spring-framework-petclinic/actions/workflows/maven-build.yml/badge.svg)](https://github.com/spring-petclinic/spring-framework-petclinic/actions/workflows/maven-build.yml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=spring-petclinic_spring-framework-petclinic&metric=alert_status)](https://sonarcloud.io/dashboard?id=spring-petclinic_spring-framework-petclinic)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=spring-petclinic_spring-framework-petclinic&metric=coverage)](https://sonarcloud.io/dashboard?id=spring-petclinic_spring-framework-petclinic)
+What is Vulnerability ?
+Vulnerabilities are basically the security weaknesses that one might use to undermine the availability, integrity, or security of information systems. Software, hardware, networks, or even human activities are among the several parts of a system that could have these flaws. A vulnerability could be as basic as a setting gone wrong or as sophisticated as a zero-day attack.
 
-This project allows the Spring community to maintain a Petclinic version with a plain old **Spring Framework configuration**
-and with a **3-layer architecture** (i.e. presentation --> service --> repository).
-The "canonical" implementation is now based on Spring Boot, Thymeleaf and [aggregate-oriented domain]([https://github.com/spring-projects/spring-petclinic/pull/200). 
+What is Sonarqube ?
+SonarQube, previously named Sonar, is an open-source platform created by SonarSource. Its purpose is to consistently examine and evaluate the quality of code, identify security vulnerabilities, and assess technical debt across different programming languages. SonarQube delivers a single dashboard that provides real-time information into the health and security of software projects.
 
+How is SonarQube Used?
+SonarQube functions by looking at source code and finding possible problems and vulnerabilities. It uses static analysis, code smell recognition, and security vulnerability scanning all together to give complete results. SonarQube can be added to developers' work processes to help them find problems early in the development process.
+SonarQube works with many computer languages, such as Python, JavaScript, TypeScript, C#, and more. It has add-ons and plugins for well-known Integrated Development Environments (IDEs) like Eclipse, IntelliJ IDEA, and Visual Studio. This lets writers get feedback and suggestions while they're writing code.
 
-## Understanding the Spring Petclinic application with a few diagrams
+Key Features of SonarQube
+- Code Quality Analysis
+- Security Vulnerability Detection
+- Technical Debt Management
+- Continuous Integration/Continuous Deployment (CI/CD) Integration
+- Customizable Rules and Quality Profiles
 
-[See the presentation here](http://fr.slideshare.net/AntoineRey/spring-framework-petclinic-sample-application) (2017 update)
+What is OWASP Dependency-Check?
+Dependency-Check is a Software Composition Analysis (SCA) tool that attempts to detect publicly disclosed vulnerabilities contained within a project’s dependencies. It does this by determining if there is a Common Platform Enumeration (CPE) identifier for a given dependency. If found, it will generate a report linking to the associated CVE entries.
+Dependency-check has a command line interface, a Maven plugin, an Ant task, and a Jenkins plugin. The core engine contains a series of analyzers that inspect the project dependencies, collect pieces of information about the dependencies (referred to as evidence within the tool). The evidence is then used to identify the Common Platform Enumeration (CPE) for the given dependency. If a CPE is identified, a listing of associated Common Vulnerability and Exposure (CVE) entries are listed in a report. Other 3rd party services and data sources such as the NPM Audit API, the OSS Index, RetireJS, and Bundler Audit are utilized for specific technologies.Dependency-check automatically updates itself using the NVD Data Feeds hosted by NIST.
 
-## Running petclinic locally
+What is Conftest?
+Conftest helps you write tests against structured configuration data. Using Conftest you can write tests for your Kubernetes configuration, Tekton pipeline definitions, Terraform code, Serverless configs or any other config files.
 
-### With Maven command line
-```
-git clone https://github.com/spring-petclinic/spring-framework-petclinic.git
-cd spring-framework-petclinic
-./mvnw jetty:run-war
-# For Windows : ./mvnw.cmd jetty:run-war
-```
+What is Trivy?
+Trivy is a vulnerability scanner that is open-source and has been specifically developed for containers. This program is efficient and user-friendly, helping in the detection of vulnerabilities in container images and filesystems. Trivy's primary objective is to conduct scans on container images to identify any known vulnerabilities present in the installed packages and libraries.
 
-### With Docker
-```
-docker run -p 8080:8080 springcommunity/spring-framework-petclinic
-```
+Some key features of Trivy include:
+- Comprehensive vulnerability database
+- Fast and efficient scanning
+- Easy integration
+- Multiple output formats
+- Continuous updates
 
-You can then access petclinic here: [http://localhost:8080/](http://localhost:8080/)
+Let's include the devsecops tools we briefly mentioned above into the pipeline and do some hands-on. Let's get started.
 
-<img width="1042" alt="petclinic-screenshot" src="https://cloud.githubusercontent.com/assets/838318/19727082/2aee6d6c-9b8e-11e6-81fe-e889a5ddfded.png">
+Step-1
+Launch an AWS t2-large Instance. Use the image as Amazon Linux. You can create a new key pair or use an existing one. 
+- Enable 80, 443, 8080 and 9000 port settings in the Security Group.
+- You can add the userdata below for jenkins,docker,trivy installation.
 
-## In case you find a bug/suggested improvement for Spring Petclinic
-
-Our issue tracker is available here: https://github.com/spring-petclinic/spring-framework-petclinic/issues
-
-
-## Database configuration
-
-In its default configuration, Petclinic uses an in-memory database (H2) which gets populated at startup with data.
-
-A similar setups is provided for MySQL and PostgreSQL in case a persistent database configuration is needed.
-To run petclinic locally using persistent database, it is needed to run with profile defined in main pom.xml file.
-
-For MySQL database, it is needed to run with 'MySQL' profile defined in main pom.xml file.
-
-```
-./mvnw jetty:run-war -P MySQL
-```
-
-Before do this, would be good to check properties defined in MySQL profile inside pom.xml file.
-
-```
-<properties>
-    <jpa.database>MYSQL</jpa.database>
-    <jdbc.driverClassName>com.mysql.cj.jdbc.Driver</jdbc.driverClassName>
-    <jdbc.url>jdbc:mysql://localhost:3306/petclinic?useUnicode=true</jdbc.url>
-    <jdbc.username>petclinic</jdbc.username>
-    <jdbc.password>petclinic</jdbc.password>
-</properties>
-```      
-
-You could start MySQL locally with whatever installer works for your OS, or with docker:
-
-```
-docker run -e MYSQL_USER=petclinic -e MYSQL_PASSWORD=petclinic -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:5.7.8
-```
-
-For PostgreSQL database, it is needed to run with 'PostgreSQL' profile defined in main pom.xml file.
-
-```
-./mvnw jetty:run-war -P PostgreSQL
-```
-
-Before do this, would be good to check properties defined in PostgreSQL profile inside pom.xml file.
-
-```
-<properties>
-    <jpa.database>POSTGRESQL</jpa.database>
-    <jdbc.driverClassName>org.postgresql.Driver</jdbc.driverClassName>
-    <jdbc.url>jdbc:postgresql://localhost:5432/petclinic</jdbc.url>
-    <jdbc.username>postgres</jdbc.username>
-    <jdbc.password>petclinic</jdbc.password>
-</properties>
-```
-You could also start PostgreSQL locally with whatever installer works for your OS, or with docker:
-
-```
-docker run --name postgres-petclinic -e POSTGRES_PASSWORD=petclinic -e POSTGRES_DB=petclinic -p 5432:5432 -d postgres:9.6.0
+```bash
+#! /bin/bash
+# update os
+dnf update -y
+# set server hostname as jenkins-server
+hostnamectl set-hostname jenkins-server
+# install git
+dnf install git -y
+# install java 17
+dnf install java-17-amazon-corretto-devel -y
+# install jenkins
+wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+dnf upgrade
+dnf install jenkins -y
+systemctl enable jenkins
+systemctl start jenkins
+# install docker
+dnf install docker -y
+systemctl start docker
+systemctl enable docker
+usermod -a -G docker ec2-user
+usermod -a -G docker jenkins
+# configure docker as cloud agent for jenkins
+cp /lib/systemd/system/docker.service /lib/systemd/system/docker.service.bak
+sed -i 's/^ExecStart=.*/ExecStart=\/usr\/bin\/dockerd -H tcp:\/\/127.0.0.1:2376 -H unix:\/\/\/var\/run\/docker.sock/g' /lib/systemd/system/docker.service
+systemctl daemon-reload
+systemctl restart jenkins
+# install trivy
+rpm -ivh https://github.com/aquasecurity/trivy/releases/download/v0.31.3/trivy_0.31.3_Linux-64bit.rpm
 ```
 
-## Persistence layer choice
+Step-2 Configure Jenkins-Server
+- After instance state running, we can configure the jenkins server.Now, grab your Public IP Address
 
-The persistence layer have 3 available implementations: JPA (default), JDBC and Spring Data JPA.
-The default JPA implementation could be changed by using a Spring profile: `jdbc`, `spring-data-jpa` and `jpa`.  
-As an example, you may use the `-Dspring.profiles.active=jdbc` VM options to start the application with the JDBC implementation.
-
-```
-./mvnw jetty:run-war -Dspring.profiles.active=jdbc
+```bash
+<EC2 Public IP Address:8080>
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
+- Unlock Jenkins using an administrative password and install the required plugins.
 
-## Working with Petclinic in your IDE
+![image](./image/jenkins-passwd.png)
 
-### Prerequisites
-The following items should be installed in your system:
-* Java 8 or newer (full JDK not a JRE)
-* Maven 3.3+ (http://maven.apache.org/install.html)
-* git command line tool (https://help.github.com/articles/set-up-git)
-* Jetty 9.4+ or Tomcat 9+
-* Your prefered IDE 
-  * Eclipse with the m2e plugin. Note: when m2e is available, there is an m2 icon in Help -> About dialog. If m2e is not there, just follow the install process here: http://www.eclipse.org/m2e/
-  * [Spring Tools Suite](https://spring.io/tools) (STS)
-  * IntelliJ IDEA
+- Jenkins will now get installed and install all the libraries.
+
+![image](./image/jenkins-user.png)
 
 
-### Steps:
+Step-3 Install Sonarqube as a docker container
 
-1) On the command line
-```
-git clone https://github.com/spring-petclinic/spring-framework-petclinic.git
+- Go to Instance terminal and enter below code to install sonarqube
+
+```bash
+docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
 ```
 
-2) Inside Eclipse or STS
-```
-File -> Import -> Maven -> Existing Maven project
-```
-Then either build on the command line `./mvnw generate-resources` or using the Eclipse launcher (right click on project and `Run As -> Maven install`) to generate the CSS.
-Configure a Jetty or a Tomcat web container then deploy the `spring-petclinic.war` file.
-
-3) Inside IntelliJ IDEA
-
-In the main menu, select `File > Open` and select the Petclinic [pom.xml](pom.xml). Click on the `Open` button.
-
-CSS files are generated from the Maven build. You can either build them on the command line `./mvnw generate-resources` 
-or right click on the `spring-petclinic` project then `Maven -> Generates sources and Update Folders`.
-
-Go to the `Run -> Edit Configuration` then configure a Tomcat or a Jetty web container. Deploy the `spring-petclinic.war` file.
-Run the application by clicking on the `Run` icon.
-
-
-4) Navigate to Petclinic
-
-Visit [http://localhost:8080](http://localhost:8080) in your browser.
-
-
-## Working with Petclinic in IntelliJ IDEA
-
-### prerequisites
-The following items should be installed in your system:
-
-
-## Looking for something in particular?
-
-| Java Config |   |
-|-------------|---|
-| Java config branch | Petclinic uses XML configuration by default. In case you'd like to use Java Config instead, there is a Java Config branch available [here](https://github.com/spring-petclinic/spring-framework-petclinic/tree/javaconfig) |
-
-| Inside the 'Web' layer | Files |
-|------------------------|-------|
-| Spring MVC - XML integration | [mvc-view-config.xml](src/main/resources/spring/mvc-view-config.xml)  |
-| Spring MVC - ContentNegotiatingViewResolver| [mvc-view-config.xml](src/main/resources/spring/mvc-view-config.xml) |
-| JSP custom tags | [WEB-INF/tags](src/main/webapp/WEB-INF/tags), [createOrUpdateOwnerForm.jsp](src/main/webapp/WEB-INF/jsp/owners/createOrUpdateOwnerForm.jsp)|
-| JavaScript dependencies | [JavaScript libraries are declared as webjars in the pom.xml](pom.xml) |
-| Static resources config | [Resource mapping in Spring configuration](/src/main/resources/spring/mvc-core-config.xml#L30) |
-| Static resources usage | [htmlHeader.tag](src/main/webapp/WEB-INF/tags/htmlHeader.tag), [footer.tag](src/main/webapp/WEB-INF/tags/footer.tag) |
-| Thymeleaf | In the late 2016, the original [Spring Petclinic](https://github.com/spring-projects/spring-petclinic) has moved from JSP to Thymeleaf. |
-
-| 'Service' and 'Repository' layers | Files |
-|-----------------------------------|-------|
-| Transactions | [business-config.xml](src/main/resources/spring/business-config.xml), [ClinicServiceImpl.java](src/main/java/org/springframework/samples/petclinic/service/ClinicServiceImpl.java) |
-| Cache | [tools-config.xml](src/main/resources/spring/tools-config.xml), [ClinicServiceImpl.java](src/main/java/org/springframework/samples/petclinic/service/ClinicServiceImpl.java) |
-| Bean Profiles | [business-config.xml](src/main/resources/spring/business-config.xml), [ClinicServiceJdbcTests.java](src/test/java/org/springframework/samples/petclinic/service/ClinicServiceJdbcTests.java), [PetclinicInitializer.java](src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java) |
-| JDBC | [business-config.xml](src/main/resources/spring/business-config.xml), [jdbc folder](src/main/java/org/springframework/samples/petclinic/repository/jdb) |
-| JPA | [business-config.xml](src/main/resources/spring/business-config.xml), [jpa folder](src/main/java/org/springframework/samples/petclinic/repository/jpa) |
-| Spring Data JPA | [business-config.xml](src/main/resources/spring/business-config.xml), [springdatajpa folder](src/main/java/org/springframework/samples/petclinic/repository/springdatajpa) |
-
-
-## Publishing a Docker image
-
-This application uses [Google Jib]([https://github.com/GoogleContainerTools/jib) to build an optimized Docker image
-into the [Docker Hub](https://cloud.docker.com/u/springcommunity/repository/docker/springcommunity/spring-framework-petclinic/)
-repository.
-The [pom.xml](pom.xml) has been configured to publish the image with a the `springcommunity/spring-framework-petclinic` image name.
-
-Jib containerizes this WAR project by using the [distroless Jetty](https://github.com/GoogleContainerTools/distroless/tree/master/java/jetty) as a base image.
-
-Build and push the container image of Petclinic to the Docker Hub registry:
-```
-mvn jib:build
+```bash
+<EC2 Public IP Address:9000>
+username: admin
+password: admin
 ```
 
+![image](./image/sonar-login.png)
+![image](./image/sonar-dash.png)
 
-## Interesting Spring Petclinic forks
+Step-4 Install Plugins
 
-The Spring Petclinic master branch in the main [spring-projects](https://github.com/spring-projects/spring-petclinic)
-GitHub org is the "canonical" implementation, currently based on Spring Boot and Thymeleaf.
+- Go to Jenkins WebUI Manage Jenkins --> Plugins --> Available Plugins Install below plugins
+1-Eclipse Temurin Installer
+2-SonarQube Scanner
+3-OWASP Dependency-Check
+4-Blue Ocean
 
-This [spring-framework-petclinic](https://github.com/spring-petclinic/spring-framework-petclinic) project is one of the [several forks](https://spring-petclinic.github.io/docs/forks.html) 
-hosted in a special GitHub org: [spring-petclinic](https://github.com/spring-petclinic).
-If you have a special interest in a different technology stack
-that could be used to implement the Pet Clinic then please join the community there.
+![image](./image/jenkins-plugin.png)
 
+Step-5 Configure Java, Maven in Global Tool Configuration
+- Go to Jenkins WebUI Manage Jenkins --> Tools --> Install JDK, Maven and SonarQube Scanner -->Click on Apply and Save
 
-## Interaction with other open source projects
-
-One of the best parts about working on the Spring Petclinic application is that we have the opportunity to work in direct contact with many Open Source projects. We found some bugs/suggested improvements on various topics such as Spring, Spring Data, Bean Validation and even Eclipse! In many cases, they've been fixed/implemented in just a few days.
-Here is a list of them:
-
-| Name | Issue |
-|------|-------|
-| Spring JDBC: simplify usage of NamedParameterJdbcTemplate | [SPR-10256](https://jira.springsource.org/browse/SPR-10256) and [SPR-10257](https://jira.springsource.org/browse/SPR-10257) |
-| Bean Validation / Hibernate Validator: simplify Maven dependencies and backward compatibility |[HV-790](https://hibernate.atlassian.net/browse/HV-790) and [HV-792](https://hibernate.atlassian.net/browse/HV-792) |
-| Spring Data: provide more flexibility when working with JPQL queries | [DATAJPA-292](https://jira.springsource.org/browse/DATAJPA-292) |
-| Dandelion: improves the DandelionFilter for Jetty support | [113](https://github.com/dandelion/dandelion/issues/113) |
+![image](./image/jdk.png)
+![image](./image/sonar-server.png)
+![image](./image/maven-tool.png)
 
 
-# Contributing
+Step-5 Configure Sonarqube in Manage Jenkins
 
-Approved by the Spring team, this repo is a fork of the [spring-projects/spring-petclinic](https://github.com/spring-projects/spring-petclinic).
+```bash
+<EC2 Public IP Address:9000>
+```
+- Go to your Sonarqube Server. Click on Administration → Security → Users → Click on Tokens and Update Token → Give it a name → and click on Generate Token
 
-The [issue tracker](/issues) is the preferred channel for bug reports, features requests and submitting pull requests.
+![image](./image/sonar-token-1.png)
+![image](./image/sonar-token-2.png)
+![image](./image/sonar-token-3.png)
 
-For pull requests, editor preferences are available in the [editor config](.editorconfig) for easy use in common text editors. Read more and download plugins at <http://editorconfig.org>.
+- Copy this Token
+- Go to Jenkins WebUI --> Manage Jenkins → Credentials → Add Secret Text.
+
+![image](./image/token-jenkins.png)
+
+- Go to Jenkins Dashboard → Manage Jenkins → Configure System
+- Give a name whatever you want
+- Add Sonarqube url
+- Select sonarqube credential token
+
+![image](./image/jenkins-plug.png)
+
+Step-6 Qality Gate in Sonarqube
+- Go to SonarQube WebUI --> Administration –> Configuration –> webhooks
+
+![image](./image/qality-1.png)
+![image](./image/quality-2.png)
+![image](./image/webhook.png)
+
+Step-7 Create a pipeline
+
+- Go to Jenkins WebUI -->New item-->Pipeline
+
+![image](./image/pipe-1.png)
+
+- Add below jenkins code to pipeline section
+
+![image](./image/pipeline-script.png)
 
 
+```bash
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk'
+        maven 'maven'
+    }
+    stages {
+        stage("Git Checkout") {
+            steps {
+                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/ersinsari13/devsecops.git'
+            }
+        }
+        stage("Compile") {
+            steps {
+                sh "mvn clean compile"
+            }
+        }
+        stage("Test Cases") {
+            steps {
+                sh "mvn test"
+            }
+        }
+        stage("Sonarqube Analysis") {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh ''' 
+                        mvn clean verify sonar:sonar \
+                        -Dsonar.projectKey=Petclinic
+                    '''
+                }
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    script {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
+        }
+        stage("Build") {
+            steps {
+                sh "mvn clean install"
+            }
+        }
+        stage('OWASP-Dependency-Check') {
+            steps {
+                sh "mvn dependency-check:check"
+            }
+            post {
+                always {
+                    dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+                }
+            }
+        }
+        
+        stage('Scan Dockerfile with conftest') {
+            steps {
+                echo 'Scanning Dockerfile'
+                sh "docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy dockerfile-conftest.rego Dockerfile"
+            }
+        }
+        
+        stage('Prepare Tags for Docker Images') {
+            steps {
+                echo 'Preparing Tags for Docker Images'
+                script {
+                    MVN_VERSION=sh(script:'. ${WORKSPACE}/target/maven-archiver/pom.properties && echo $version', returnStdout:true).trim()
+                    env.IMAGE_TAG_DEVSECOPS="ersinsari/devsecops:${MVN_VERSION}-b${BUILD_NUMBER}"
+                }
+            }
+        }
+        stage('Build App Docker Images') {
+            steps {
+                echo 'Building App Dev Images'
+                sh "docker build --force-rm -t ${IMAGE_TAG_DEVSECOPS} ."
+                sh 'docker image ls'
+            }
+        }
+        stage('Scan Image with Trivy') {
+            steps {
+                script {
+                    def scanResult = sh(script: "trivy image --severity CRITICAL --exit-code 1 ${IMAGE_TAG_DEVSECOPS}", returnStatus: true)
+                    if (scanResult != 0) {
+                        error "Critical vulnerabilities found in Docker image. Failing the pipeline."
+                    }
+                }
+            }
+        }
+    }
+}
+```
+- Tools: Specifies the tools needed for the pipeline, in this case, JDK and Maven.
+- Git Checkout: Check out the code from the specified Git repository.
+- Compile: Runs Maven commands to clean the workspace and compile the code.
+- Test Cases: Executes the Maven test phase to run the unit tests.
+- SonarQube Analysis: Analyze the code quality using SonarQube
+- Quality Gate: Check the SonarQube quality gate status and abort the pipeline if it fails.
+- Build: Runs Maven commands to clean the workspace and install the build artifacts.
+- OWASP-Dependency-Check: Perform a security vulnerability check on project dependencies.
+- Scan Dockerfile with conftest: Runs Conftest in a Docker container to test the Dockerfile against the specified policy.
+- Prepare Tags for Docker Images: Extracts the Maven version from the build and sets the environment variable IMAGE_TAG_DEVSECOPS with the image tag.
+- Build App Docker Images: Build the Docker image for the application.
+- Scan Image with Trivy: Scans the Docker image for critical vulnerabilities and fails the pipeline if any are found.
+
+- Click Build Now and Open Blue Ocean
+
+![image](./image/pipeline-script-2.png)
+
+- After the pipeline runs, you should receive a failure at the "Scan Dockerfile with conftest" step; this is a normal occurrence.
+
+![image](./image/pipeline-result.png)
+
+- The reason for this is that if you check the GitHub repository we included in the pipeline, you will see a file named dockerfile-conftest.rego. Conftest performs the Dockerfile scan based on the conditions in this file. We received a failure because the Dockerfile we want to use does not meet the necessary requirements specified. We will correct this.
+
+Step-8 Sonarqube inspection and add Custom Quality Gate
+
+- But first, let's discuss the pipeline output and then talk a bit about the SonarQube interface and quality gates.
+
+- You can inspect your source code qality by clicking SonarQube section
+
+![image](./image/sonarqube-1.png)
+
+![image](./image/sonarqube-2.png)
+
+- You can add custom Quality-Gates depends on your company rules
+- SonarQube UI click Qualiyy Gates --> Create --> give name and save --> Unlock editing -->Add Condition-->On Overall Code
+
+![image](./image/gate-1.png)
+
+![image](./image/gate-2.png)
+
+![image](./image/gate-3.png)
+
+![image](./image/gate-4.png)
 
 
+Step-8 Dependency-Check inspection
+
+- You can inspect your source code dependency-check score by clicking Dependency-Check section
+![image](./image/check-1.png)
+
+![image](./image/check-2.png)
+
+![image](./image/check-3.png)
+
+Step-9 Improving Dockerfile security
+
+Now it's time to improve the Dockerfile security based on the Conftest results.
+
+![image](./image/conftest-1.png)
+
+- Change your Dockerfile below
+
+```bash
+FROM openjdk:8
+EXPOSE 8082
+RUN addgroup -S devops-security && adduser -u 999 -S devsecops -G devops-security
+COPY target/petclinic.war petclinic.war
+USER 999
+ENTRYPOINT ["java","-jar","/home/devsecops/petclinic.war"]
+```
+After this change, you should be able to successfully pass the Dockerfile scanning stage with Conftest.
+
+![image](./image/conftest-2.png)
+
+![image](./image/trivy-1.png)
