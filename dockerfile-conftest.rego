@@ -1,6 +1,6 @@
 package main
 
-# ENV değişkenlerinde gizli bilgileri saklamayın
+# Do Not store secrets in ENV variables
 secrets_env = [
     "passwd",
     "password",
@@ -21,7 +21,7 @@ deny[msg] {
     msg = sprintf("Satır %d: ENV anahtarında potansiyel bir gizli bilgi bulundu: %s", [i, val])
 }
 
-# Yalnızca güvenilir temel imajlar kullanın
+# Only use trusted base images
 deny[msg] {
     input[i].Cmd == "from"
     val := input[i].Value
@@ -30,7 +30,7 @@ deny[msg] {
     msg = sprintf("Satır %d: Güvenilir bir temel imaj kullanın", [i])
 }
 
-# 'latest' etiketini temel imajlar için kullanmayın
+# Do not use 'latest' tag for base images
 deny[msg] {
     input[i].Cmd == "from"
     val := input[i].Value
@@ -40,7 +40,7 @@ deny[msg] {
     msg = sprintf("Satır %d: Temel imajlar için 'latest' etiketini kullanmayın", [i])
 }
 
-# curl bashing'den kaçının
+# Avoid curl bashing
 deny[msg] {
     input[i].Cmd == "run"
     val := concat(" ", input[i].Value)
@@ -49,7 +49,7 @@ deny[msg] {
     msg = sprintf("Satır %d: curl bashing'den kaçının", [i])
 }
 
-# Sistem paketlerini güncellemeyin
+# Do not upgrade your system packages
 warn[msg] {
     input[i].Cmd == "run"
     val := concat(" ", input[i].Value)
@@ -58,13 +58,13 @@ warn[msg] {
     msg = sprintf("Satır %d: Sistem paketlerinizi güncellemeyin: %s", [i, val])
 }
 
-# ADD komutunu mümkünse kullanmayın
+# Do not use ADD if possible
 deny[msg] {
     input[i].Cmd == "add"
     msg = sprintf("Satır %d: ADD yerine COPY kullanın", [i])
 }
 
-# Herhangi bir kullanıcı...
+# Any user...
 any_user {
     input[i].Cmd == "user"
 }
@@ -74,7 +74,7 @@ deny[msg] {
     msg = "Root olarak çalışmayın, USER komutunu kullanın"
 }
 
-# ... ama root olmamalı
+# ... but do not root
 forbidden_users = [
     "root",
     "toor",
@@ -84,12 +84,12 @@ forbidden_users = [
 deny[msg] {
     input[i].Cmd == "user"
     users := [name | name := input[i].Value]
-    lastuser := users[count(users)-1]
+    lastuser := users[count(users) - 1]
     contains(lower(lastuser), forbidden_users[_])
     msg = sprintf("Satır %d: Son USER direktifi (USER %s) yasaklı", [i, lastuser])
 }
 
-# sudo kullanmayın
+# Do not sudo
 deny[msg] {
     input[i].Cmd == "run"
     val := concat(" ", input[i].Value)
@@ -97,7 +97,7 @@ deny[msg] {
     msg = sprintf("Satır %d: 'sudo' komutunu kullanmayın", [i])
 }
 
-# Çok aşamalı derlemeler kullanın
+# Use multi-stage builds
 default multi_stage = true
 multi_stage = true {
     input[i].Cmd == "copy"
