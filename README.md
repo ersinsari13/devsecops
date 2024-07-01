@@ -326,17 +326,17 @@ pipeline {
 
 - You can add custom Quality-Gates depends on your company rules
 
-- SonarQube UI click Qualiyy Gates --> Create --> give name and save --> Unlock editing -->Add Condition-->On Overall Code
+- SonarQube UI click Qualiyy Gates --> Create --> give name and save --> Unlock editing --> Add Condition --> On Overall Code
 
-![image](./image/gate-1.png)
+![image](./image/gates-1.png)
 
-![image](./image/gate-2.png)
+![image](./image/gates-2.png)
 
 ![image](./image/gate-3.png)
 
 ![image](./image/gate-4.png)
 
-## Step-8 Dependency-Check inspection
+## Step-9 Dependency-Check inspection
 
 - You can inspect your source code dependency-check score by clicking Dependency-Check section
 
@@ -346,7 +346,7 @@ pipeline {
 
 ![image](./image/check-3.png)
 
-## Step-9 Improving Dockerfile security
+## Step-10 Improving Dockerfile security
 
 Now it's time to improve the Dockerfile security based on the Conftest results.
 
@@ -368,7 +368,7 @@ After this change, you should be able to successfully pass the Dockerfile scanni
 
 ![image](./image/trivy-1.png)
 
-## Step-10 Docker Image Scan via Trivy
+## Step-11 Docker Image Scan via Trivy
 
 Lastly, the pipeline will fail at the image scanning stage with Trivy. If we look at the Jenkinsfile, it is designed to fail if a critical vulnerability is found during the image scan with Trivy. At this stage, the critical vulnerabilities in the image need to be resolved before proceeding. The pipeline output includes recommendations on how to resolve the vulnerabilities.
 
